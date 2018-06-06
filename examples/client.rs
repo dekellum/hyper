@@ -1,12 +1,16 @@
 #![deny(warnings)]
+extern crate futures;
+extern crate tokio;
 extern crate hyper;
 extern crate pretty_env_logger;
 
 use std::env;
 use std::io::{self, Write};
 
+use futures::{Future, Stream};
+use tokio::runtime::Runtime;
+
 use hyper::Client;
-use hyper::rt::{self, Future, Stream};
 
 fn main() {
     pretty_env_logger::init();
@@ -26,6 +30,8 @@ fn main() {
         println!("This example only works with 'http' URLs.");
         return;
     }
+
+    let mut runtime = Runtime::new().unwrap();
     let client = Client::new();
 
     let job = client
@@ -53,5 +59,7 @@ fn main() {
             eprintln!("Error {}", err);
         });
 
-    rt::run(job); //blocks indefinitely, because client is not yet dropped.
+    runtime.spawn(job); // non-blocking
+    drop(client); // below shutdown would halt without this drop.
+    runtime.shutdown_on_idle().wait().unwrap();
 }
