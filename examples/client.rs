@@ -27,10 +27,8 @@ fn main() {
         return;
     }
 
-    rt::run(rt::lazy(move || {
-        let client = Client::new();
-
-        client
+    rt::run(
+        Client::new()
             // Fetch the url...
             .get(url)
             // And then, if we get a response back...
@@ -54,5 +52,5 @@ fn main() {
             .map_err(|err| {
                 eprintln!("Error {}", err);
             })
-    }));
+    );
 }
